@@ -34,12 +34,12 @@ router.put("/:id", verify, async (req, res) => {
     }
 });
 
-// Delete movie
+// Delete list
 router.delete("/:id", verify, async (req, res) => {
     if (req.user.isAdmin) {
         try {
-            await Movie.findByIdAndDelete(req.params.id);
-            res.status(200).json("The movie has been deleted...");
+            await List.findByIdAndDelete(req.params.id);
+            res.status(200).json("The list has been deleted...");
         } catch (err) {
             res.status(500).json(err);
         }
@@ -48,48 +48,32 @@ router.delete("/:id", verify, async (req, res) => {
     }
 });
 
-// Get movie
-router.get("/find/:id", verify, async (req, res) => {
-    try {
-        const movie = Movie.findById(req.params.id);
-        res.status(200).json(movie);
-    } catch (err) {
-        res.status(500).json(err);
-    }
-});
-
-// Get random movie
-router.get("/random", verify, async (req, res) => {
-    const type = req.query.type;
-    let movie;
-    try {
-        if (type === "series") {
-            movie = await Movie.aggregate([
-                { $match: { isSeries: true } },
-                { $sample: { size: 1 } }
-            ]);
-        } else {
-            movie = await Movie.aggregate([
-                { $match: { isSeries: false } },
-                { $sample: { size: 1} }
-            ]);
-        }
-    } catch (err) {
-        res.status(500).json(err);
-    }
-});
-
-// Get all movie
+// Get list
 router.get("/", verify, async (req, res) => {
-    if (req.user.isAdmin) {
-        try {
-            const movies = await Movie.find();
-            res.status(200).json(movies);
-        } catch (err) {
-            res.status(500).json(err);
+    const typeQuery = req.query.type;
+    const genreQuery = req.query.genre;
+    let list = [];
+    try {
+        if (typeQuery) {
+            if (genreQuery) {
+                list = await List.aggregate([
+                    { $match: { type: typeQuery, genre: genreQuery } },
+                    { $sample: { size: 10 } }
+                ]);
+            } else {
+                list = await List.aggregate([
+                    { $match: { type: typeQuery } },
+                    { $sample: { size: 10 } }
+                ]);
+            }
+        } else {
+            list = await List.aggregate([
+                { $sample: { size: 10 } }
+            ]);
         }
-    } else {
-        res.status(403).json("You are not allowed!");
+        res.status(200).json(list);
+    } catch (err) {
+        res.status(500).json(err);
     }
 });
 
