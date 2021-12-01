@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+const cors = require("cors");
 const authRoute = require("./routes/auth");
 const userRoute = require("./routes/users");
 const movieRoute = require("./routes/movies");
@@ -8,6 +9,14 @@ const listRoute = require("./routes/lists");
 
 dotenv.config();
 const app = express();
+
+app.use(cors());
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With,accesstoken');
+  next();
+});
 
 mongoose
   .connect(process.env.MONGO_URL, {
